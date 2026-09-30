@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RLC 회로 실험실</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 32px 16px;
+      font-family: Arial, sans-serif;
+      background: #f1f5f9;
+      color: #172033;
+    }
+
+    main {
+      max-width: 460px;
+      margin: 0 auto;
+      padding: 28px;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 8px 30px #0000000d;
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 26px;
+    }
+
+    .description {
+      color: #596579;
+      line-height: 1.6;
+    }
+
+    label {
+      display: block;
+      margin-top: 22px;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      font-size: 18px;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 26px;
+      padding: 16px;
+      border: none;
+      border-radius: 10px;
+      background: #2563eb;
+      color: white;
+      font-size: 17px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #1d4ed8;
+    }
+
+    #result {
+      margin-top: 24px;
+      padding: 20px;
+      border-radius: 12px;
+      background: #eff6ff;
+      line-height: 1.8;
+    }
+
+    .note {
+      margin-bottom: 0;
+      font-size: 13px;
+      color: #64748b;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+
+<body>
+  <main>
+    <h1>⚡ RLC 회로 실험실</h1>
+
+    <p class="description">
+      직렬 RLC 회로의 값을 입력하고<br>
+      공진 주파수와 Q값을 확인하세요.
+    </p>
+
+    <form id="rlc-form">
+      <label for="resistance">저항 R (Ω)</label>
+      <input
+        id="resistance"
+        type="number"
+        step="any"
+        min="0"
+        value="100"
+        required
+      >
+
+      <label for="inductance">인덕턴스 L (mH)</label>
+      <input
+        id="inductance"
+        type="number"
+        step="any"
+        min="0"
+        value="10"
+        required
+      >
+
+      <label for="capacitance">커패시턴스 C (μF)</label>
+      <input
+        id="capacitance"
+        type="number"
+        step="any"
+        min="0"
+        value="1"
+        required
+      >
+
+      <button type="submit">계산하기</button>
+    </form>
+
+    <div id="result" role="status" aria-live="polite">
+      값을 입력하고 계산하기를 눌러주세요.
+    </div>
+
+    <p class="note">
+      이상적인 소자로 구성된 직렬 RLC 회로를 기준으로 계산합니다.
+      R, L, C는 모두 0보다 큰 값을 입력하세요.
+    </p>
+  </main>
+
+  <script>
+    const form = document.getElementById("rlc-form");
+    const result = document.getElementById("result");
+
+    form.addEventListener("submit", function (event) {
+      event.preventDefault();
+
+      // 화면에서 입력한 숫자를 가져옵니다.
+      const resistance =
+        document.getElementById("resistance").valueAsNumber;
+
+      const inductanceMH =
+        document.getElementById("inductance").valueAsNumber;
+
+      const capacitanceUF =
+        document.getElementById("capacitance").valueAsNumber;
+
+      // 0, 음수, 올바르지 않은 입력을 확인합니다.
+      const values = [
+        resistance,
+        inductanceMH,
+        capacitanceUF
+      ];
+
+      if (!values.every(value =>
+        Number.isFinite(value) && value > 0
+      )) {
+        result.textContent =
+          "R, L, C에 모두 0보다 큰 숫자를 입력해주세요.";
+        return;
+      }
+
+      // mH를 H로, μF를 F로 바꿉니다.
+      const inductance = inductanceMH * 0.001;
+      const capacitance = capacitanceUF * 0.000001;
+
+      // 공진 주파수와 Q값을 계산합니다.
+      const frequency =
+        1 / (2 * Math.PI * Math.sqrt(
+          inductance * capacitance
+        ));
+
+      const quality =
+        Math.sqrt(inductance / capacitance) / resistance;
+
+      if (
+        !Number.isFinite(frequency) ||
+        !Number.isFinite(quality) ||
+        frequency <= 0 ||
+        quality <= 0
+      ) {
+        result.textContent =
+          "입력값이 너무 크거나 작습니다. 값을 조정해주세요.";
+        return;
+      }
+
+      const format = new Intl.NumberFormat("ko-KR", {
+        maximumSignificantDigits: 7
+      });
+
+      result.innerHTML = `
+        <strong>계산 결과</strong><br>
+        공진 주파수: ${format.format(frequency)} Hz<br>
+        Q값: ${format.format(quality)}
+      `;
+    });
+  </script>
+</body>
+</html>
+
